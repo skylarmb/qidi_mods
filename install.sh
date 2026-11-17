@@ -7,12 +7,13 @@ HOST="${1:-qidi@10.0.4.69}"
 cd "$(dirname "$0")"
 
 scp klipper/extras/*.py "$HOST:~/klipper/klippy/extras/"
-scp config/*.cfg "$HOST:~/printer_data/config/"
+scp config/*.cfg config/*.conf "$HOST:~/printer_data/config/"
 
 # Add the include after [include box.cfg] if printer.cfg does not have it.
 ssh "$HOST" 'cfg=~/printer_data/config/printer.cfg
 grep -q "^\[include box_humidity.cfg\]" "$cfg" ||
   sed -i "/^\[include box.cfg\]/a [include box_humidity.cfg]" "$cfg"
+curl -s -X POST "localhost:7125/machine/services/restart?service=crowsnest"
 curl -s -X POST "localhost:7125/machine/services/restart?service=klipper"
 # The box MCU shuts down if the host stops while the box heater is on.
 # Wait for Klipper to start, then send FIRMWARE_RESTART if it is not ready.
